@@ -7,6 +7,24 @@
 
 #define CLASSNAME "com/learning/anti_debug/NativeUtil"
 
+static void anti_debug(void) __attribute__((constructor));
+
+//void* be_timeout_check(){
+//    time_t ts;
+//    time(&ts);
+//    pid_t pid = getpid();
+//    while(true) {
+//        time_t ts_now;
+//        time(&ts_now);
+//        double diff = difftime(ts_now, ts);
+//        if(diff > 10.0){
+//            LOGD("Timeout! Kill process: %d", pid);
+//            kill(pid, SIGKILL);
+//        }
+//        sleep(2);
+//    }
+//}
+
 void be_attached_check(){
     try {
         const int bufsize = 1024;
@@ -17,7 +35,7 @@ void be_attached_check(){
         FILE* fd = fopen(filename, "r");
         if(fd != NULL) {
             while (fgets(line, bufsize, fd)) {
-//                LOGD("%s", line);
+                LOGD("%s", line);
                 if (strncmp(line, "TracerPid", 9) == 0) {
                     int statue = atoi(&line[10]);
                     if (statue != 0) {
@@ -48,7 +66,7 @@ void* task_thread(void* val) {
     }
 }
 
-void anti_debug() {
+static void anti_debug() {
     pthread_t id;
     long timeval = 10;
     LOGD("Call anti debug...");
@@ -56,6 +74,10 @@ void anti_debug() {
         LOGE("Failed to create a debug checking thread!");
         exit(-1);
     };
+//    if(pthread_create(&id, NULL, (void *(*)(void *))&be_timeout_check, (void *)timeval) != 0) {
+//        LOGE("Failed to create a debug checking thread!");
+//        exit(-1);
+//    }
     pthread_detach(id);
 }
 
@@ -115,7 +137,7 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved) {
     assert(env != NULL);
 
     if(!registerNatives(env)) {
-        __android_log_print(ANDROID_LOG_VERBOSE, NATIVE_TAG, "Register native methods failed!");
+        LOGE("Register native methods failed!");
         return result;
     }
 
